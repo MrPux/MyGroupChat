@@ -5,13 +5,13 @@ import java.io.IOException;
 public class Server
 {
 
-	ServerSocket serverScoket;
+	ServerSocket serverSocket;
 
-	public static void main(String[] args)
+	public static void main(String[] args) throws IOException
 	{
 		ServerSocket serverSocket = new ServerSocket(1818);
 		Server server = new Server(serverSocket);
-		server.start(); 
+		server.Start(); 
 	}
 
 	public Server(ServerSocket serverSocket)
@@ -23,13 +23,13 @@ public class Server
  	{
  		try
  		{
- 			while(!serverSocet.isClosed())
+ 			while(!serverSocket.isClosed())
  			{
  				Socket socket = serverSocket.accept();
  				System.out.println("New User connected! ");
 
  				UserHandler userHandler = new UserHandler(socket);
- 				Thread thread = new Thread(userHander);
+ 				Thread thread = new Thread(userHandler);
  				thread.start();
  			}
 

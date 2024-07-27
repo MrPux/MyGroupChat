@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.InputStreamReader;
-import java.io.OutPutStreamReader;
+import java.io.OutputStreamWriter;
 
 import java.util.ArrayList;
 
@@ -15,57 +15,59 @@ public class UserHandler implements Runnable
 	private BufferedReader bufferedReader;
 	private BufferedWriter bufferedWriter;
 
-	private static ArrayList<UserHandler> userHandler = new ArrayList<>()
+	private static ArrayList<UserHandler> userHandlers = new ArrayList<>();
 
 	public UserHandler(Socket socket)
 	{
-		try 
+		try{  
 			this.socket = socket;
-			this.bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStreamReader()));
-			this.bufferedWriter = new BufferedWriter(new BufferedWriter(socket.getOutputStreamWriter())); 
+			this.bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+			this.bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())); 
 			this.username = bufferedReader.readLine();
 
-			userHandler.add(this);
+			userHandlers.add(this);
 
-			broadcastMessage("Server: " + username + "has entered the chat!");
+			broadcastMessage("Server: " + username + " has entered the chat!");
 
 		} catch(IOException e)
 		{
-			closeEverything(socket, bufferedReader, bufferedWriter);
+			closeEverything(this.socket, this.bufferedReader, this.bufferedWriter);
 		}
-	
-
-@override 
-public void run()
-{
-	String activeUserMessageListener;
-	while(socket.isConnected())
-	{
-		try
-		{
-			activeUserMessageListener = bufferedReader.readLine();
-			broadcastMessage(activeUserMessageListener);
-
-		}catch(IOException e)
-		{
-			closeEverything(socket, bufferedReader, bufferedWriter);
-		}
-
 	}
-} 
+
+	@Override 
+	public void run()
+	{
+		String activeUserMessageListener;
+		while(socket.isConnected())
+		{
+			try
+			{
+				activeUserMessageListener = bufferedReader.readLine();
+				broadcastMessage(activeUserMessageListener);
+
+			}catch(IOException e)
+			{
+				closeEverything(socket, bufferedReader, bufferedWriter);
+			}
+
+		}
+	} 
 
 
 // ---------------------------------------------------------
 
 	public void broadcastMessage(String message)
 	{
-		for(UserHandler user : userHandler)
+		for(UserHandler user : userHandlers)
 		{
 			try
 			{
 				if(!user.username.equals(username))
 				{
-					System.out.pritnln(message);
+					user.bufferedWriter.write(message);
+					user.bufferedWriter.newLine();
+					user.bufferedWriter.flush();
 				}
 
 			}catch(IOException e)
@@ -77,12 +79,12 @@ public void run()
 
 	public void removeUserHandler()
 	{
-		userHandler.remove(this);
-		broadcastMessaga("Server: " + username + " has left the chat!");
+		userHandlers.remove(this);
+		broadcastMessage("Server: " + username + " has left the chat!");
 	}
 
 
-	public void closeEverything(Socket socket, BufferedReder bufferedReader, BufferedWriter bufferedWriter)
+	public void closeEverything(Socket socket, BufferedReader bufferedReader, BufferedWriter bufferedWriter)
 	{
 		removeUserHandler();
 		try
@@ -93,7 +95,7 @@ public void run()
 			}
 			if(bufferedReader != null)
 			{
-				bufferedReder.close();
+				bufferedReader.close();
 			}
 			if(bufferedWriter != null)
 			{

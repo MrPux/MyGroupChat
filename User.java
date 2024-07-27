@@ -14,13 +14,11 @@ public class User{
 
 private Socket socket;
 private String username;
-private BufferedReader buffereReader;
+private BufferedReader bufferedReader;
 private BufferedWriter bufferedWriter;
 
-public static void main(Stringp[] args)
-{
-	try
-	{
+public static void main(String[] args) throws IOException
+{ 
 		Scanner input = new Scanner(System.in);
 		System.out.println("What will your user name be: ");
 		String username = input.nextLine();
@@ -28,17 +26,11 @@ public static void main(Stringp[] args)
 
 		User user = new User(username, socket); 
 
-		sendMessage();
-		listenForMessage();
+		user.listenForMessage();
+		user.sendMessage();
 
 
-		input.close();
-
-
-	}catch(IOException e)
-	{
-		closeEverything(socket, bufferedReader, bufferedWriter);
-	}
+		input.close(); 
 }
 
 // Initialazing Phase
@@ -49,11 +41,12 @@ public User(String username, Socket socket)
 	{
 		this.username = username;
 		this.socket = socket;
-		this.bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStreamReader()));
-		this.bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStreamWriter()));
+		this.bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+		this.bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
 
 	}catch(IOException e)
 	{
+		closeEverything(socket, bufferedReader, bufferedWriter);
 	}
 }
 
@@ -86,7 +79,7 @@ public void listenForMessage()
 {
 	new Thread ( new Runnable()
 	{
-		@override
+		@Override
 		public void run()
 		{
 			String message;
@@ -103,7 +96,7 @@ public void listenForMessage()
 				closeEverything(socket, bufferedReader, bufferedWriter);
 			}
 		}
-	})
+	}).start();
 }
 //
 
